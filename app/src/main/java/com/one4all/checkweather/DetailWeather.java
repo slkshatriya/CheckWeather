@@ -1,14 +1,15 @@
 package com.one4all.checkweather;
 
-import android.content.Context;
-import android.content.Intent;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -21,9 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class MainActivity extends AppCompatActivity {
+public class DetailWeather extends AppCompatActivity {
     TextView cityName;
     TextView description;
     TextView cityTemp;
@@ -34,47 +33,32 @@ public class MainActivity extends AppCompatActivity {
     EditText editText;
     RequestQueue requestQueue;
     private static final String TAG = "hello";
-    View focusView;
+    ProgressBar progressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        findView();
+        setContentView(R.layout.activity_detail_weather);
         requestQueue = Volley.newRequestQueue(this);
-        Log.d(TAG, "onCreate: passed");
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                InputMethodManager inputManager = (InputMethodManager)
-                        getSystemService(Context.INPUT_METHOD_SERVICE);
-
-                inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
-                        InputMethodManager.HIDE_NOT_ALWAYS);
-                if (!editText.getText().toString().isEmpty()) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeather.class);
-                    intent.putExtra("cityName", editText.getText().toString());
-                    startActivity(intent);
-                    editText.setText("");
-                }else {
-                    editText.setError("City name is Empty");
-                    editText.setFocusable(true);
-                }
-            }
-        });
+        String cityName = getIntent().getStringExtra("cityName");
+        getSupportActionBar().setTitle(cityName);
+        findView();
+        progressBar.setVisibility(View.VISIBLE);
+        jsonParse();
     }
     public void findView(){
-//        cityName = findViewById(R.id.city_name);
-//        description = findViewById(R.id.description);
-//        cityTemp = findViewById(R.id.city_temp);
-//        humidity = findViewById(R.id.humidity);
-//        minTemp = findViewById(R.id.min_temp);
-//        maxTemp = findViewById(R.id.max_temp);
+        cityName = findViewById(R.id.city_name);
+        description = findViewById(R.id.description);
+        cityTemp = findViewById(R.id.city_temp);
+        humidity = findViewById(R.id.humidity);
+        minTemp = findViewById(R.id.min_temp);
+        maxTemp = findViewById(R.id.max_temp);
         button = findViewById(R.id.button);
         editText =findViewById(R.id.editText);
+        progressBar = findViewById(R.id.progressBar);
     }
     public void jsonParse(){
-        String cit = editText.getText().toString();
+        String cit = getIntent().getStringExtra("cityName");
 
 
         Log.d(TAG, "jsonParse: parsed");
@@ -88,8 +72,9 @@ public class MainActivity extends AppCompatActivity {
                 String cityN;
 
                 try {
-                      cityN = response.getString("name");
+                    cityN = response.getString("name");
                     Log.d(TAG, "onResponse: "+cityN);
+                    getSupportActionBar().setTitle(cityN);
                     cityName.setText(cityN);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -108,20 +93,28 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 try {
+                    progressBar.setVisibility(View.INVISIBLE);
                     JSONObject jsonObject = response.getJSONObject("main");
                     String ctemp = jsonObject.getString("temp");
                     Log.d(TAG, "onResponse: "+ctemp);
-                    cityTemp.setText(ctemp+"K");
+                    double temp = Double.parseDouble(ctemp) -273.15;
+                    int t = (int) temp;
+
+                    cityTemp.setText(t +"°C");
                     String humi =jsonObject.getString("humidity");
 
                     Log.d(TAG, "onResponse: "+humi);
                     humidity.setText(humi);
                     String tM = jsonObject.getString("temp_min");
                     Log.d(TAG, "onResponse: "+tM);
-                    minTemp.setText(tM+"K");
+                    double clesinMin = Double.parseDouble(tM)  -273.15;
+                    int r = (int) clesinMin;
+                    minTemp.setText(r+"°C");
                     String tMax = jsonObject.getString("temp_max");
                     Log.d(TAG, "onResponse: "+tMax);
-                    maxTemp.setText(tMax+"K");
+                    double clesMax = Double.parseDouble(tMax) -273.15;
+                    int o = (int) clesMax;
+                    maxTemp.setText(o+"°C");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -131,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                progressBar.setVisibility(View.INVISIBLE);
+                Toast.makeText(DetailWeather.this,error.getMessage(),Toast.LENGTH_LONG).show();
                 Log.d(TAG, "onErrorResponse: passed");
                 error.printStackTrace();
                 Log.d(TAG, "onErrorResponse: "+error);
@@ -141,6 +136,4 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
-
 }
