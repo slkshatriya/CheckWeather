@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -42,6 +43,17 @@ public class MainActivity extends AppCompatActivity {
         findView();
         requestQueue = Volley.newRequestQueue(this);
         Log.d(TAG, "onCreate: passed");
+        editText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if(event.getAction() == KeyEvent.KEYCODE_ENTER){
+                    checking();
+                    return true;
+
+                }
+                return false;
+            }
+        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -51,18 +63,24 @@ public class MainActivity extends AppCompatActivity {
 
                 inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
                         InputMethodManager.HIDE_NOT_ALWAYS);
-                if (!editText.getText().toString().isEmpty()) {
-                    Intent intent = new Intent(MainActivity.this, DetailWeather.class);
-                    intent.putExtra("cityName", editText.getText().toString());
-                    startActivity(intent);
-                    editText.setText("");
-                }else {
-                    editText.setError("City name is Empty");
-                    editText.setFocusable(true);
-                }
+                checking();
+
             }
         });
     }
+    public void checking(){
+        if (!editText.getText().toString().isEmpty()) {
+            Intent intent = new Intent(MainActivity.this, DetailWeather.class);
+            intent.putExtra("cityName", editText.getText().toString());
+            startActivity(intent);
+            editText.setText("");
+        }else {
+            editText.setError("City name is Empty");
+            editText.setFocusable(true);
+        }
+
+    }
+
     public void findView(){
 //        cityName = findViewById(R.id.city_name);
 //        description = findViewById(R.id.description);
